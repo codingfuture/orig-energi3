@@ -221,7 +221,7 @@ func (m *MigrationAPI) SearchGen3DestinationByGen2Address(
 		Context: context.WithValue(
 			context.Background(),
 			energi_params.GeneralProxyCtxKey,
-			energi_common.GeneralProxyHashGen(m.backend.BlockChain()),
+			energi_common.GeneralProxyHashGen(),
 		),
 		End: &currBlockNo,
 	}

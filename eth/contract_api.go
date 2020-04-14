@@ -219,7 +219,7 @@ func (b *EthAPIBackend) isFilteredLog(
 ) bool {
 
 	for _, addr := range q.Addresses {
-		generalProxyHash := energi_common.GeneralProxyHashExtractor(ctx, addr, blockNo)
+		generalProxyHash := energi_common.GeneralProxyHashExtractor(ctx, b.eth.blockchain, addr, blockNo)
 		if generalProxyHash != nil && log.Address.Hash() == *generalProxyHash {
 			return true
 		}

@@ -28,11 +28,11 @@ import (
 
 // GeneralProxyHashFunc provides the function that helps check for governed
 // proxy contracts filtered logs.
-type GeneralProxyHashFunc func(addr common.Address, blockheight *uint64) *common.Hash
+type GeneralProxyHashFunc func(blockchain *core.BlockChain, addr common.Address, blockheight *uint64) *common.Hash
 
 // GeneralProxyHashGen returns a function that helps retrieve the governed proxy contract hash.
-func GeneralProxyHashGen(blockchain *core.BlockChain) GeneralProxyHashFunc {
-	return func(addr common.Address, blockheight *uint64) *common.Hash {
+func GeneralProxyHashGen() GeneralProxyHashFunc {
+	return func(blockchain *core.BlockChain, addr common.Address, blockheight *uint64) *common.Hash {
 		var err error
 		var statedb *state.StateDB
 
@@ -54,11 +54,11 @@ func GeneralProxyHashGen(blockchain *core.BlockChain) GeneralProxyHashFunc {
 
 // GeneralProxyHashExtractor retrieves if it exists the proxy hash func passed
 // through the context.
-func GeneralProxyHashExtractor(ctx context.Context, qAddr common.Address, blockNo *uint64) *common.Hash {
+func GeneralProxyHashExtractor(ctx context.Context, blockchain *core.BlockChain, qAddr common.Address, blockNo *uint64) *common.Hash {
 	proxyHashFunc := ctx.Value(energi_params.GeneralProxyCtxKey).(GeneralProxyHashFunc)
 	if proxyHashFunc == nil {
 		return nil
 	}
 
-	return proxyHashFunc(qAddr, blockNo)
+	return proxyHashFunc(blockchain, qAddr, blockNo)
 }
