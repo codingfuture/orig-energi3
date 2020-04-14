@@ -58,7 +58,7 @@ var DefaultConfig = Config{
 	MinerRecommit:  3 * time.Second,
 	MinerNonceCap:  0,
 
-	MinerAutocollateral: 1,
+	MinerAutocollateral: 0,
 
 	TxPool: core.DefaultTxPoolConfig,
 	GPO: gasprice.Config{

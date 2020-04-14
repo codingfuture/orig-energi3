@@ -411,7 +411,7 @@ var (
 	MinerAutocollateralFlag = cli.Uint64Flag{
 		Name:  "miner.autocollateralize",
 		Usage: "Autocollateralize for MN owner addresses (0 - disable, 1 - after MN rewards, 2 - rapid)",
-		Value: 1,
+		Value: 0,
 	}
 	// Account settings
 	UnlockedAccountFlag = cli.StringFlag{
