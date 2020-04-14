@@ -119,6 +119,7 @@ func TestPoSChain(t *testing.T) {
 			return crypto.Sign(hash, signers[addr])
 		},
 		func() int { return 1 },
+		func() bool { return true },
 	)
 
 	chainConfig := *params.EnergiTestnetChainConfig
@@ -489,6 +490,7 @@ func TestPoSMine(t *testing.T) {
 			return crypto.Sign(hash, signers[addr])
 		},
 		func() int { return 1 },
+		func() bool { return true },
 	)
 
 	chainConfig := *params.EnergiTestnetChainConfig

@@ -46,7 +46,7 @@ func (fc *fakeDoSChain) GetHeader(hash common.Hash, number uint64) *types.Header
 	return fc.parent
 }
 func (fc *fakeDoSChain) GetHeaderByNumber(number uint64) *types.Header {
-	panic("Not impl")
+	return fc.parent
 }
 func (fc *fakeDoSChain) GetHeaderByHash(hash common.Hash) *types.Header {
 	panic("Not impl")
@@ -77,6 +77,10 @@ func TestPoSDoS(t *testing.T) {
 		parent:  p,
 		current: c,
 	}
+	h.Number = common.Big2
+	h.Difficulty = common.Big1
+	p.Difficulty = common.Big2
+	c.Difficulty = common.Big2
 
 	base := uint64(1000000)
 	curr_time := base
@@ -106,6 +110,13 @@ func TestPoSDoS(t *testing.T) {
 	c.Time = base
 	h.Time = base + energi_params.MinBlockGap
 	assert.Equal(t, eth_consensus.ErrDoSThrottle, engine.checkDoS(fc, h, p))
+
+	log.Trace("Side chain as old fork (strong)")
+	h.Difficulty = c.Difficulty
+	h.ParentHash[0] += 1
+	assert.Equal(t, nil, engine.checkDoS(fc, h, p))
+	h.Difficulty = common.Big1
+	h.ParentHash[0] -= 1
 
 	log.Trace("Side chain as old fork")
 	curr_time = base
@@ -138,12 +149,12 @@ func TestPoSDoS(t *testing.T) {
 	c.Time = base
 	h.Time = base + energi_params.MinBlockGap + 1
 	assert.Equal(t, eth_consensus.ErrDoSThrottle, engine.checkDoS(fc, h, p))
-	assert.Equal(t, 1, KnownStakesTestCount(&engine.knownStakes))
+	assert.Equal(t, 2, KnownStakesTestCount(&engine.knownStakes))
 
 	log.Trace("Another coinbase")
 	h.Coinbase = common.HexToAddress("0x1234")
 	assert.Equal(t, nil, engine.checkDoS(fc, h, p))
-	assert.Equal(t, 2, KnownStakesTestCount(&engine.knownStakes))
+	assert.Equal(t, 3, KnownStakesTestCount(&engine.knownStakes))
 
 	log.Trace("Another variation")
 	h.Root = common.HexToHash("0x1234")
@@ -158,15 +169,19 @@ func TestPoSDoS(t *testing.T) {
 	assert.Equal(t, nil, engine.checkDoS(fc, h, p))
 	h.Coinbase = common.HexToAddress("0x3456")
 	assert.Equal(t, nil, engine.checkDoS(fc, h, p))
-	assert.Equal(t, 3, KnownStakesTestCount(&engine.knownStakes))
+	assert.Equal(t, 4, KnownStakesTestCount(&engine.knownStakes))
 
 	curr_time += energi_params.StakeThrottle / 2
 	assert.Equal(t, nil, engine.checkDoS(fc, h, p))
 	h.Time += 1
 	assert.Equal(t, eth_consensus.ErrDoSThrottle, engine.checkDoS(fc, h, p))
-	assert.Equal(t, 3, KnownStakesTestCount(&engine.knownStakes))
+	assert.Equal(t, 4, KnownStakesTestCount(&engine.knownStakes))
 
 	curr_time += energi_params.StakeThrottle
+	assert.Equal(t, nil, engine.checkDoS(fc, h, p))
+	assert.Equal(t, 2, KnownStakesTestCount(&engine.knownStakes))
+
+	curr_time += energi_params.OldThrottle
 	assert.Equal(t, nil, engine.checkDoS(fc, h, p))
 	assert.Equal(t, 1, KnownStakesTestCount(&engine.knownStakes))
 }

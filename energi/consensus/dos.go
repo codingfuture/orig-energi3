@@ -36,12 +36,12 @@ type KnownStakeKey struct {
 	parent   common.Hash
 }
 type KnownStakeValue struct {
-	block common.Hash
-	ts    uint64
+	block  common.Hash
+	expire uint64
 }
 
 func (ksv *KnownStakeValue) isActive(now uint64) bool {
-	return (now - ksv.ts) < energi_params.StakeThrottle
+	return now < ksv.expire
 }
 
 type KnownStakes = sync.Map
@@ -52,14 +52,25 @@ func (e *Energi) checkDoS(
 	parent *types.Header,
 ) error {
 	old_fork_threshold := e.now() - energi_params.OldForkPeriod
+	throttle := energi_params.StakeThrottle
 
 	// POS-8: allow old fork only if current head is not fresh enough
+	//
+	// UPD: allow strong enough old forks to recover from heavy chain splits
 	//---
 	if parent.Time < old_fork_threshold {
 		current := chain.CurrentHeader()
 
 		if current.Time > old_fork_threshold {
-			return eth_consensus.ErrDoSThrottle
+			canonical_alt := chain.GetHeaderByNumber(header.Number.Uint64())
+
+			if current.Difficulty.Cmp(header.Difficulty) > 0 &&
+				canonical_alt != nil &&
+				canonical_alt.Difficulty.Cmp(header.Difficulty) > 0 {
+				return eth_consensus.ErrDoSThrottle
+			}
+
+			throttle = energi_params.OldThrottle
 		}
 	}
 
@@ -73,8 +84,8 @@ func (e *Energi) checkDoS(
 		parent:   header.ParentHash,
 	}
 	ksv := &KnownStakeValue{
-		block: header.Hash(),
-		ts:    now,
+		block:  header.Hash(),
+		expire: now + throttle,
 	}
 
 	if prev_ksvi, ok := e.knownStakes.LoadOrStore(ksk, ksv); ok {
