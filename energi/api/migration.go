@@ -196,7 +196,7 @@ func (m *MigrationAPI) SearchGen2Coins(
 type Gen3Dest struct {
 	ItemID      uint64
 	Gen3Address common.Address
-	Amount      *big.Int
+	Amount      *hexutil.Big
 }
 
 // SearchGen3DestinationByGen2Address returns the gen3 destination address(s) searched
@@ -205,6 +205,10 @@ func (m *MigrationAPI) SearchGen3DestinationByGen2Address(
 	gen2Owners []string,
 	includeEmpty bool,
 ) ([]Gen3Dest, error) {
+	if m.backend.IsPublicService() {
+		return nil, errors.New("This API is disabled for security reasons")
+	}
+
 	mgrtContract, err := energi_abi.NewGen2Migration(
 		energi_params.Energi_MigrationContract, m.backend.(bind.ContractBackend))
 	if err != nil {
@@ -235,22 +239,27 @@ func (m *MigrationAPI) SearchGen3DestinationByGen2Address(
 	if err != nil {
 		return nil, err
 	}
+	coin_items := make(map[uint64]bool, len(coins))
+	for _, coin := range coins {
+		coin_items[coin.ItemID] = true
+	}
 
 	data := make([]Gen3Dest, 0, len(gen2Owners))
 	for migrations.Next() {
 		mEvent := migrations.Event
+		item_id := mEvent.ItemId.Uint64()
 
-		for _, coin := range coins {
-			if mEvent.ItemId.Cmp(new(big.Int).SetUint64(coin.ItemID)) == 0 {
-				dst := Gen3Dest{
-					ItemID:      mEvent.ItemId.Uint64(),
-					Amount:      mEvent.Amount,
-					Gen3Address: mEvent.Destination,
-				}
-				data = append(data, dst)
+		if _, found := coin_items[item_id]; found {
+			data = append(data, Gen3Dest{
+				ItemID:      item_id,
+				Amount:      (*hexutil.Big)(mEvent.Amount),
+				Gen3Address: mEvent.Destination,
+			})
+
+			if len(data) == len(coin_items) {
 				break
 			}
-		}
+        }
 	}
 
 	if err = migrations.Error(); err != nil {
