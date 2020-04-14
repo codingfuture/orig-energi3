@@ -67,6 +67,8 @@ type Energi struct {
 	// Atomic alignment to 64-bit
 	nonceCap uint64
 
+	lastMinedHeight uint64
+
 	// The rest
 	config       *params.EnergiConfig
 	db           ethdb.Database
@@ -590,7 +592,13 @@ func (e *Energi) Seal(
 			//       state of the block (input parameters). This is essential
 			//       for consensus and correct distribution of gas.
 			if success && err == nil {
-				result, err = e.recreateBlock(chain, header, block.Transactions())
+				// Prevent duplicate blocks being generated due to rescheduling race condition
+				if height, prev_mined := header.Number.Uint64(), atomic.LoadUint64(&e.lastMinedHeight); prev_mined >= height || !atomic.CompareAndSwapUint64(&e.lastMinedHeight, prev_mined, height) {
+					success = false
+					log.Error("PoS miner skips a duplicate height block", "height", height, "coinbase", header.Coinbase)
+				} else {
+					result, err = e.recreateBlock(chain, header, block.Transactions())
+				}
 			}
 
 			if err != nil {
