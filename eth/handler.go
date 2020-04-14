@@ -737,6 +737,10 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 			return errResp(ErrDecode, "msg %v: %v", msg, err)
 		}
 
+		if len(ncp.CppSig) == 0 {
+			p.Log().Debug("Ignoring local checkpoint from old node", "number", ncp.Number, "hash", ncp.Hash)
+		}
+
 		p.Log().Debug("Received checkpoint", "number", ncp.Number, "hash", ncp.Hash)
 
 		p.MarkCheckpoint(ncp.Number, ncp.Hash)

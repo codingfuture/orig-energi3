@@ -563,6 +563,11 @@ func (p *peer) SendCheckpoint(cpi *core.CheckpointInfo) error {
 }
 
 func (p *peer) AsyncSendCheckpoint(cpi *core.CheckpointInfo) {
+	// A safe catch all not to send local checkpoints
+	if len(cpi.CppSignature) == 0 {
+		return
+	}
+
 	select {
 	case p.queuedCps <- cpi:
 		break
