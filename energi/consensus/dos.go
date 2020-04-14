@@ -18,6 +18,7 @@ package consensus
 
 import (
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"energi.world/core/gen3/common"
@@ -38,6 +39,7 @@ type KnownStakeKey struct {
 type KnownStakeValue struct {
 	block  common.Hash
 	expire uint64
+	dups   uint32
 }
 
 func (ksv *KnownStakeValue) isActive(now uint64) bool {
@@ -91,10 +93,14 @@ func (e *Energi) checkDoS(
 	if prev_ksvi, ok := e.knownStakes.LoadOrStore(ksk, ksv); ok {
 		prev_ksv := prev_ksvi.(*KnownStakeValue)
 		if prev_ksv.isActive(now) && prev_ksv.block != ksv.block {
-			return eth_consensus.ErrDoSThrottle
-		}
+			if atomic.LoadUint32(&prev_ksv.dups) >= e.ksDupLimit {
+				return eth_consensus.ErrDoSThrottle
+			}
 
-		e.knownStakes.Store(ksk, ksv)
+			atomic.AddUint32(&prev_ksv.dups, uint32(1))
+		} else {
+			e.knownStakes.Store(ksk, ksv)
+		}
 	}
 
 	//---

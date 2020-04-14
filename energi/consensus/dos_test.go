@@ -86,6 +86,7 @@ func TestPoSDoS(t *testing.T) {
 	curr_time := base
 	engine := New(nil, nil)
 	engine.now = func() uint64 { return curr_time }
+	engine.ksDupLimit = 0
 
 	// POS-8: old fork protection
 	//============================
@@ -159,6 +160,16 @@ func TestPoSDoS(t *testing.T) {
 	log.Trace("Another variation")
 	h.Root = common.HexToHash("0x1234")
 	assert.Equal(t, eth_consensus.ErrDoSThrottle, engine.checkDoS(fc, h, p))
+
+	log.Trace("Dup limit")
+	engine.ksDupLimit = 1
+	assert.Equal(t, nil, engine.checkDoS(fc, h, p))
+	assert.Equal(t, eth_consensus.ErrDoSThrottle, engine.checkDoS(fc, h, p))
+	engine.ksDupLimit = 3
+	assert.Equal(t, nil, engine.checkDoS(fc, h, p))
+	assert.Equal(t, nil, engine.checkDoS(fc, h, p))
+	assert.Equal(t, eth_consensus.ErrDoSThrottle, engine.checkDoS(fc, h, p))
+	engine.ksDupLimit = 0
 
 	log.Trace("Should reset")
 	curr_time += energi_params.StakeThrottle

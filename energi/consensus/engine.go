@@ -90,6 +90,7 @@ type Energi struct {
 	knownStakes  KnownStakes
 	nextKSPurge  uint64
 	txhashMap    *lru.Cache
+	ksDupLimit   uint32
 }
 
 func New(config *params.EnergiConfig, db ethdb.Database) *Energi {
@@ -152,6 +153,7 @@ func New(config *params.EnergiConfig, db ethdb.Database) *Energi {
 		now:          func() uint64 { return uint64(time.Now().Unix()) },
 		nextKSPurge:  0,
 		txhashMap:    txhashMap,
+		ksDupLimit:   3,
 
 		accountsFn:  func() []common.Address { return nil },
 		peerCountFn: func() int { return 0 },
