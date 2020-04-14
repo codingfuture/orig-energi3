@@ -55,7 +55,9 @@ type CheckpointService struct {
 func NewCheckpointService(ethServ *eth.Ethereum) (node.Service, error) {
 	r := &CheckpointService{
 		eth:      ethServ,
-		callOpts: &bind.CallOpts{},
+		callOpts: &bind.CallOpts{
+			GasLimit: energi_params.UnlimitedGas,
+		},
 	}
 	return r, nil
 }

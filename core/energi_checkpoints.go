@@ -112,6 +112,7 @@ func (cm *checkpointManager) setup(chain CheckpointChain) {
 				Checkpoint{
 					Number: k,
 					Hash:   v,
+					Since:  0xFFFFFFFFFFFFFFFF,
 				},
 				[]CheckpointSignature{},
 				true,
