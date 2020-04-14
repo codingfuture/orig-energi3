@@ -259,7 +259,7 @@ func (m *MigrationAPI) SearchGen3DestinationByGen2Address(
 			if len(data) == len(coin_items) {
 				break
 			}
-        }
+		}
 	}
 
 	if err = migrations.Error(); err != nil {
