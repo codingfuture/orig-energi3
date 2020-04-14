@@ -193,6 +193,83 @@ func (m *MigrationAPI) SearchGen2Coins(
 	return m.searchGen2Coins(rawOwners, m.listGen2Coins, include_empty)
 }
 
+type Gen3Dest struct {
+	ItemID      uint64
+	Gen3Address common.Address
+	Amount      *hexutil.Big
+}
+
+// SearchGen3DestinationByGen2Address returns the gen3 destination address(s) searched
+// by the gen2 address owner(s).
+func (m *MigrationAPI) SearchGen3DestinationByGen2Address(
+	gen2Owners []string,
+	includeEmpty bool,
+) ([]Gen3Dest, error) {
+	if m.backend.IsPublicService() {
+		return nil, errors.New("This API is disabled for security reasons")
+	}
+
+	mgrtContract, err := energi_abi.NewGen2Migration(
+		energi_params.Energi_MigrationContract, m.backend.(bind.ContractBackend))
+	if err != nil {
+		log.Error("Failed to create contract face", "err", err)
+		return nil, err
+	}
+
+	currBlockNo := m.backend.CurrentBlock().NumberU64()
+	filterOps := &bind.FilterOpts{
+		Context: context.WithValue(
+			context.Background(),
+			energi_params.GeneralProxyCtxKey,
+			energi_common.GeneralProxyHashGen(),
+		),
+		End: &currBlockNo,
+	}
+
+	migrations, err := mgrtContract.FilterMigrated(filterOps)
+	if err != nil {
+		log.Error("Failed to fetch all migrations", "err", err)
+		return nil, err
+	}
+
+	// Release the resources on exit.
+	defer migrations.Close()
+
+	coins, err := m.SearchGen2Coins(gen2Owners, includeEmpty)
+	if err != nil {
+		return nil, err
+	}
+	coin_items := make(map[uint64]bool, len(coins))
+	for _, coin := range coins {
+		coin_items[coin.ItemID] = true
+	}
+
+	data := make([]Gen3Dest, 0, len(gen2Owners))
+	for migrations.Next() {
+		mEvent := migrations.Event
+		item_id := mEvent.ItemId.Uint64()
+
+		if _, found := coin_items[item_id]; found {
+			data = append(data, Gen3Dest{
+				ItemID:      item_id,
+				Amount:      (*hexutil.Big)(mEvent.Amount),
+				Gen3Address: mEvent.Destination,
+			})
+
+			if len(data) == len(coin_items) {
+				break
+			}
+        }
+	}
+
+	if err = migrations.Error(); err != nil {
+		log.Error("Migrations fetch error", "err", err)
+		return nil, err
+	}
+
+	return data, err
+}
+
 func (m *MigrationAPI) SearchRawGen2Coins(
 	rawOwners []common.Address,
 	include_empty bool,

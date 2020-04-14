@@ -132,7 +132,7 @@ func (c *CheckpointService) loop() {
 		Context: context.WithValue(
 			context.Background(),
 			energi_params.GeneralProxyCtxKey,
-			energi_common.GeneralProxyHashGen(c.eth.BlockChain()),
+			energi_common.GeneralProxyHashGen(),
 		),
 	}
 
