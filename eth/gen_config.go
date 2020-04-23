@@ -44,6 +44,7 @@ func (c Config) MarshalTOML() (interface{}, error) {
 		MinerDPoS               DPoSMap `toml:",omitempty"`
 		MinerMigration          string  `toml:",omitempty"`
 		MinerNonceCap           uint64  `toml:"-"`
+		MinerBailout            uint64  `toml:"-"`
 		MinerAutocollateral     uint64  `toml:",omitempty"`
 		PublicService           bool    `toml:",omitempty"`
 		Ethash                  ethash.Config
@@ -82,6 +83,7 @@ func (c Config) MarshalTOML() (interface{}, error) {
 	enc.MinerDPoS = c.MinerDPoS
 	enc.MinerMigration = c.MinerMigration
 	enc.MinerNonceCap = c.MinerNonceCap
+	enc.MinerBailout = c.MinerBailout
 	enc.MinerAutocollateral = c.MinerAutocollateral
 	enc.PublicService = c.PublicService
 	enc.Ethash = c.Ethash
@@ -124,6 +126,7 @@ func (c *Config) UnmarshalTOML(unmarshal func(interface{}) error) error {
 		MinerDPoS               *DPoSMap `toml:",omitempty"`
 		MinerMigration          *string  `toml:",omitempty"`
 		MinerNonceCap           *uint64  `toml:"-"`
+		MinerBailout            *uint64  `toml:"-"`
 		MinerAutocollateral     *uint64  `toml:",omitempty"`
 		PublicService           *bool    `toml:",omitempty"`
 		Ethash                  *ethash.Config
@@ -214,6 +217,9 @@ func (c *Config) UnmarshalTOML(unmarshal func(interface{}) error) error {
 	}
 	if dec.MinerNonceCap != nil {
 		c.MinerNonceCap = *dec.MinerNonceCap
+	}
+	if dec.MinerBailout != nil {
+		c.MinerBailout = *dec.MinerBailout
 	}
 	if dec.MinerAutocollateral != nil {
 		c.MinerAutocollateral = *dec.MinerAutocollateral

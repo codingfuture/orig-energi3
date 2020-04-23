@@ -519,6 +519,34 @@ func (e *Energi) mine(
 		}
 	}
 
+	// Bail out for non-ballast staking
+	if bailout := e.GetMinerBailout(); !migration_dpos && !e.testing {
+		log.Trace("Checking PoS miner bailout", "bailout", bailout)
+		bailout_header := parent
+
+		for ; bailout > 0; bailout-- {
+			found := false
+			for _, a := range accounts {
+				if a == bailout_header.Coinbase {
+					found = true
+					break
+				}
+			}
+			if !found {
+				break
+			}
+
+			bailout_header := chain.GetHeader(bailout_header.ParentHash, bailout_header.Number.Uint64()-1)
+			if bailout_header == nil {
+				break
+			}
+		}
+
+		if bailout == 0 {
+			log.Warn("PoS miner refuses to mine on bailout")
+		}
+	}
+
 	//---
 	for ; ; blockTime++ {
 		if max_time := e.now() + MaxFutureGap; blockTime > max_time {

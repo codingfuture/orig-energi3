@@ -213,6 +213,7 @@ var AppHelpFlagGroups = []flagGroup{
 			utils.MinerDPoSFlag,
 			utils.MinerMigrationFlag,
 			utils.MinerNonceCapFlag,
+			utils.MinerBailoutFlag,
 			utils.MinerAutocollateralFlag,
 		},
 	},

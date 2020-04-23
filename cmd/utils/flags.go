@@ -407,6 +407,12 @@ var (
 	MinerNonceCapFlag = cli.Uint64Flag{
 		Name:  "miner.noncecap",
 		Usage: "Cap the maximum PoS Nonce value",
+		Value: 10000,
+	}
+	MinerBailoutFlag = cli.Uint64Flag{
+		Name:  "miner.bailout",
+		Usage: "The limit of own last blocks in a row to bail out mining",
+		Value: 3,
 	}
 	MinerAutocollateralFlag = cli.Uint64Flag{
 		Name:  "miner.autocollateralize",
@@ -1318,6 +1324,9 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *eth.Config) {
 	}
 	if ctx.GlobalIsSet(MinerNonceCapFlag.Name) {
 		cfg.MinerNonceCap = ctx.GlobalUint64(MinerNonceCapFlag.Name)
+	}
+	if ctx.GlobalIsSet(MinerBailoutFlag.Name) {
+		cfg.MinerBailout = ctx.GlobalUint64(MinerBailoutFlag.Name)
 	}
 	if ctx.GlobalIsSet(MinerAutocollateralFlag.Name) {
 		cfg.MinerAutocollateral = ctx.GlobalUint64(MinerAutocollateralFlag.Name)

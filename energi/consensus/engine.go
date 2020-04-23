@@ -66,6 +66,7 @@ type DiffFn func(ChainReader, uint64, *types.Header, *timeTarget) *big.Int
 type Energi struct {
 	// Atomic alignment to 64-bit
 	nonceCap uint64
+	bailout  uint64
 
 	lastMinedHeight uint64
 
@@ -748,6 +749,12 @@ func (e *Energi) SetMinerNonceCap(nonceCap uint64) {
 }
 func (e *Energi) GetMinerNonceCap() uint64 {
 	return atomic.LoadUint64(&e.nonceCap)
+}
+func (e *Energi) SetMinerBailout(count uint64) {
+	atomic.StoreUint64(&e.bailout, count)
+}
+func (e *Energi) GetMinerBailout() uint64 {
+	return atomic.LoadUint64(&e.bailout)
 }
 func (e *Energi) SetMinerCB(
 	accountsFn AccountsFn,
