@@ -1251,6 +1251,9 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals bool) (int, []
 			parent = bc.GetBlock(block.ParentHash(), block.NumberU64()-1)
 		}
 		state := bc.CalculateBlockState(parent.Hash(), parent.NumberU64())
+		if state == nil {
+			return it.index, events, coalescedLogs, consensus.ErrMissingState
+		}
 		// Process block using the parent state as reference point.
 		t0 := time.Now()
 		receipts, logs, usedGas, err := bc.processor.Process(block, state, bc.vmConfig)

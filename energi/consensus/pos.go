@@ -392,7 +392,7 @@ func (e *Energi) lookupStakeWeight(
 	// NOTE: we need to ensure at least one iteration with the balance condition
 	for (till.Time > since) || first_run {
 		if blockst == nil {
-			log.Warn("PoS state root failure", "header", till.Hash())
+			log.Warn("PoS state root failure in lookup", "header", till.Hash())
 			return 0, eth_consensus.ErrMissingState
 		}
 

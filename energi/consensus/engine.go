@@ -354,7 +354,7 @@ func (e *Energi) VerifySeal(chain ChainReader, header *types.Header) error {
 	parent_number := header.Number.Uint64() - 1
 	blockst := chain.CalculateBlockState(header.ParentHash, parent_number)
 	if blockst == nil {
-		log.Error("PoS state root failure", "header", header.ParentHash)
+		log.Error("PoS state root failure in seal", "header", header.ParentHash)
 		return eth_consensus.ErrMissingState
 	}
 
