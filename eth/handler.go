@@ -54,6 +54,8 @@ const (
 	minBroadcastPeers = 4
 
 	cpChanSize = 8
+
+	cpHandshareLimit = 16
 )
 
 var (
@@ -726,9 +728,16 @@ func (pm *ProtocolManager) handleMsg(p *peer) error {
 		p.Log().Debug("Sending checkpoints")
 
 		cps := pm.blockchain.ListCheckpoints()
+		sent := 0
 
 		for i := range cps {
-			p.AsyncSendCheckpoint(&cps[i])
+			if p.AsyncSendCheckpoint(&cps[i]) {
+				sent++
+
+				if sent > cpHandshareLimit {
+					break
+				}
+			}
 		}
 
 	case p.version >= nrg70 && msg.Code == CheckpointMsg:

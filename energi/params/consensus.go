@@ -27,7 +27,8 @@ const (
 	TargetPeriodGap   uint64 = AverageTimeBlocks * TargetBlockGap
 
 	// DoS protection
-	OldForkPeriod uint64 = 15 * 60
+	OldForkPeriod uint64 = 30 * 60
+	OldThrottle   uint64 = 60 * 60
 	StakeThrottle uint64 = 60
 
 	UnlimitedGas uint64 = (1 << 40)

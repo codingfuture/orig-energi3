@@ -17,6 +17,7 @@
 package consensus
 
 import (
+	"encoding/hex"
 	"math/big"
 
 	"energi.world/core/gen3/common"
@@ -85,7 +86,7 @@ func (e *Energi) processBlockRewards(
 	total_reward := big.NewInt(0)
 	err = e.rewardAbi.Unpack(&total_reward, "getReward", output)
 	if err != nil {
-		log.Error("Failed to unpack getReward() call", "err", err)
+		log.Error("Failed to unpack getReward() call", "err", err, "output", hex.Dump(output))
 		return nil, nil, err
 	}
 

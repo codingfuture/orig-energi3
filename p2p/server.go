@@ -814,6 +814,9 @@ func (srv *Server) maxDialedConns() int {
 	r := srv.DialRatio
 	if r == 0 {
 		r = defaultDialRatio
+		if r > srv.MaxPeers {
+			r = srv.MaxPeers
+		}
 	}
 	return srv.MaxPeers / r
 }

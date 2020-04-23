@@ -1083,6 +1083,13 @@ web3._extend({
 			outputFormatter: console.log,
 		}),
 		new web3._extend.Method({
+			name: 'setBailout',
+			call: 'miner_setBailout',
+			params: 1,
+			inputFormatter: [null],
+			outputFormatter: console.log,
+		}),
+		new web3._extend.Method({
 			name: 'setAutocollateralize',
 			call: 'miner_setAutocollateralize',
 			params: 1,

@@ -41,6 +41,7 @@ type StakingStatusInfo struct {
 	Height      uint64
 	Miner       bool
 	NonceCap    uint64
+	Bailout     uint64
 	Staking     bool
 	TotalWeight uint64
 	Accounts    []StakingAccount
@@ -63,6 +64,7 @@ func (a *EngineAPI) StakingStatus() *StakingStatusInfo {
 
 	res.Miner = engine.isMiningFn()
 	res.NonceCap = engine.GetMinerNonceCap()
+	res.Bailout = engine.GetMinerBailout()
 
 	raw_accounts := engine.accountsFn()
 	sort.Slice(raw_accounts, func(a, b int) bool {
@@ -100,5 +102,15 @@ func (a *EngineAPI) SetNonceCap(nonce *uint64) (oldNonce uint64) {
 	}
 
 	a.engine.SetMinerNonceCap(*nonce)
+	return
+}
+
+func (a *EngineAPI) SetBailout(count *uint64) (oldCount uint64) {
+	oldCount = a.engine.GetMinerBailout()
+	if count == nil {
+		return
+	}
+
+	a.engine.SetMinerBailout(*count)
 	return
 }

@@ -66,6 +66,9 @@ type DiffFn func(ChainReader, uint64, *types.Header, *timeTarget) *big.Int
 type Energi struct {
 	// Atomic alignment to 64-bit
 	nonceCap uint64
+	bailout  uint64
+
+	lastMinedHeight uint64
 
 	// The rest
 	config       *params.EnergiConfig
@@ -90,6 +93,7 @@ type Energi struct {
 	knownStakes  KnownStakes
 	nextKSPurge  uint64
 	txhashMap    *lru.Cache
+	ksDupLimit   uint32
 }
 
 func New(config *params.EnergiConfig, db ethdb.Database) *Energi {
@@ -152,6 +156,7 @@ func New(config *params.EnergiConfig, db ethdb.Database) *Energi {
 		now:          func() uint64 { return uint64(time.Now().Unix()) },
 		nextKSPurge:  0,
 		txhashMap:    txhashMap,
+		ksDupLimit:   3,
 
 		accountsFn:  func() []common.Address { return nil },
 		peerCountFn: func() int { return 0 },
@@ -349,7 +354,7 @@ func (e *Energi) VerifySeal(chain ChainReader, header *types.Header) error {
 	parent_number := header.Number.Uint64() - 1
 	blockst := chain.CalculateBlockState(header.ParentHash, parent_number)
 	if blockst == nil {
-		log.Error("PoS state root failure", "header", header.ParentHash)
+		log.Error("PoS state root failure in seal", "header", header.ParentHash)
 		return eth_consensus.ErrMissingState
 	}
 
@@ -588,7 +593,13 @@ func (e *Energi) Seal(
 			//       state of the block (input parameters). This is essential
 			//       for consensus and correct distribution of gas.
 			if success && err == nil {
-				result, err = e.recreateBlock(chain, header, block.Transactions())
+				// Prevent duplicate blocks being generated due to rescheduling race condition
+				if height, prev_mined := header.Number.Uint64(), atomic.LoadUint64(&e.lastMinedHeight); prev_mined >= height || !atomic.CompareAndSwapUint64(&e.lastMinedHeight, prev_mined, height) {
+					success = false
+					log.Error("PoS miner skips a duplicate height block", "height", height, "coinbase", header.Coinbase)
+				} else {
+					result, err = e.recreateBlock(chain, header, block.Transactions())
+				}
 			}
 
 			if err != nil {
@@ -738,6 +749,12 @@ func (e *Energi) SetMinerNonceCap(nonceCap uint64) {
 }
 func (e *Energi) GetMinerNonceCap() uint64 {
 	return atomic.LoadUint64(&e.nonceCap)
+}
+func (e *Energi) SetMinerBailout(count uint64) {
+	atomic.StoreUint64(&e.bailout, count)
+}
+func (e *Energi) GetMinerBailout() uint64 {
+	return atomic.LoadUint64(&e.bailout)
 }
 func (e *Energi) SetMinerCB(
 	accountsFn AccountsFn,

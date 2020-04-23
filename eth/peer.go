@@ -562,17 +562,18 @@ func (p *peer) SendCheckpoint(cpi *core.CheckpointInfo) error {
 	})
 }
 
-func (p *peer) AsyncSendCheckpoint(cpi *core.CheckpointInfo) {
+func (p *peer) AsyncSendCheckpoint(cpi *core.CheckpointInfo) bool {
 	// A safe catch all not to send local checkpoints
 	if len(cpi.CppSignature) == 0 {
-		return
+		return false
 	}
 
 	select {
 	case p.queuedCps <- cpi:
-		break
+		return true
 	default:
 		p.Log().Debug("Dropping checkpoint propagation", "hash", cpi.Hash)
+		return false
 	}
 }
 

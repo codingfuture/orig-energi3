@@ -56,9 +56,10 @@ var DefaultConfig = Config{
 	MinerGasCeil:   80000000,
 	MinerGasPrice:  big.NewInt(1 * params.GWei),
 	MinerRecommit:  3 * time.Second,
-	MinerNonceCap:  0,
+	MinerNonceCap:  10000,
+	MinerBailout:   3,
 
-	MinerAutocollateral: 1,
+	MinerAutocollateral: 0,
 
 	TxPool: core.DefaultTxPoolConfig,
 	GPO: gasprice.Config{
@@ -124,6 +125,7 @@ type Config struct {
 	MinerDPoS      DPoSMap `toml:",omitempty"`
 	MinerMigration string  `toml:",omitempty"`
 	MinerNonceCap  uint64  `toml:"-"`
+	MinerBailout   uint64  `toml:"-"`
 
 	MinerAutocollateral uint64 `toml:",omitempty"`
 
